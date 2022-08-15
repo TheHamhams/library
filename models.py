@@ -1,6 +1,3 @@
-from dbm.ndbm import library
-from email.policy import default
-from pickletools import uint4
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from uuid import uuid4
@@ -19,7 +16,7 @@ def load_user(user_id):
     return User.query.get(user_id)
 
 class User(db.Model, UserMixin):
-    user_id = db.Column(db.String, primary_key=True)
+    id = db.Column(db.String, primary_key=True)
     first_name = db.Column(db.String(50), nullable=True, default="")
     last_name = db.Column(db.String(50), nullable=True, default="")
     email = db.Column(db.String(50), nullable=False)
@@ -30,7 +27,7 @@ class User(db.Model, UserMixin):
     books = db.relationship('Book', backref='book')
     
     def __init__(self, email, first_name='', last_name='', password='', user_token='', g_auth_verify=False):
-        self.user_id = self.set_id()
+        self.id = self.set_id()
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
@@ -98,16 +95,17 @@ class Book(db.Model):
     author = db.Column(db.String, nullable=True)
     in_stock = db.Column(db.Boolean, default=True)
     library_token = db.Column(db.String, db.ForeignKey('library.library_token'), nullable=False)
-    user_id = db.Column(db.String, db.ForeignKey('user.user_id'), nullable=True, default='')
+    user_id = db.Column(db.String, db.ForeignKey('user.id'), nullable=True, default='')
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
-    def __init__(self, book_title, isbn, pages, language, genre, library_token, instock=True, user_id=''):
+    def __init__(self, book_title, isbn, pages, language, genre, library_token, in_stock=True, user_id=''):
         self.book_id = self.set_id()
         self.book_title = book_title
         self.isbn = isbn
         self.pages = pages
         self.language = language
         self.genre = genre
+        self.in_stock = in_stock
         self.library_token = library_token
     
     def set_id(self):
@@ -119,7 +117,7 @@ class Book(db.Model):
 
 class Transaction(db.Model):
     transaction_id = db.Column(db.String, primary_key=True)
-    user_id = db.Column(db.String, db.ForeignKey('user.user_id'), nullable = False)
+    user_id = db.Column(db.String, db.ForeignKey('user.id'), nullable = False)
     book_id = db.Column(db.String, db.ForeignKey('book.book_id'), nullable = False)
     library_id = db.Column(db.String, db.ForeignKey('library.library_id'), nullable = False)
     user_token = db.Column(db.String, db.ForeignKey('user.user_token'), nullable=False)
@@ -140,11 +138,11 @@ class Transaction(db.Model):
 
 class LibrarySchema(ma.Schema):
     class Meta:
-        fields = ['id', 'library_name', 'library_email', 'library_address', 'library_city', 'library_state']
+        fields = ['library_id', 'library_name', 'library_email', 'library_address', 'library_city', 'library_state']
         
 class BookSchema(ma.Schema):
     class Meta:
-        fields = ['id', 'book_title', 'isbn', 'pages', 'language', 'genre']
+        fields = ['book_id', 'book_title', 'isbn', 'pages', 'language', 'genre', 'author', 'in_stock']
 
 library_schema = LibrarySchema()
 book_schema = BookSchema()
