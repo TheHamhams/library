@@ -1,0 +1,51 @@
+:root {
+    --oxford-blue: #0a1128ff;
+    --royal-blue-dark: #001f54ff;
+    --indigo-dye: #034078ff;
+    --cg-blue: #1282a2ff;
+    --white: #fefcfbff;
+}
+
+body {
+    background-color: var(--cg-blue);
+}
+
+fieldset {
+    color: var(--white)
+}
+
+.navbar {
+    background-color: var(--royal-blue-dark);
+    color: var(--white);
+}
+
+.account {
+    margin-top: 20em;
+    margin-bottom: 15em;
+}
+
+.container-account {
+    background-color: var(--royal-blue-dark);
+    border-radius: 8px;
+}
+
+.container-account h2 {
+    color: var(--white);
+}
+
+.brand-img {
+    height: 80%;
+}
+
+.container-big {
+    margin-left: 20px;
+}
+
+.nav-item {
+    background-color: var(--indigo-dye);
+    margin: 5px;
+}
+
+.nav-link {
+    color: var(--white);
+}
