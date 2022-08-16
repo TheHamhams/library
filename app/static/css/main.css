@@ -8,6 +8,7 @@
 
 body {
     background-color: var(--cg-blue);
+    padding-top: 50px;
 }
 
 fieldset {

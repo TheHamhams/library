@@ -24,7 +24,7 @@ class User(db.Model, UserMixin):
     g_auth_verify = db.Column(db.Boolean, default=False)
     user_token = db.Column(db.String, default="", unique=True)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    books = db.relationship('Book', backref='book')
+
     
     def __init__(self, email, first_name='', last_name='', password='', user_token='', g_auth_verify=False):
         self.id = self.set_id()
@@ -95,18 +95,20 @@ class Book(db.Model):
     author = db.Column(db.String, nullable=True)
     in_stock = db.Column(db.Boolean, default=True)
     library_token = db.Column(db.String, db.ForeignKey('library.library_token'), nullable=False)
-    user_id = db.Column(db.String, db.ForeignKey('user.id'), nullable=True, default='')
+    user_id = db.Column(db.String, db.ForeignKey('user.id'), nullable=True)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
-    def __init__(self, book_title, isbn, pages, language, genre, library_token, in_stock=True, user_id=''):
+    def __init__(self, book_title, isbn, pages, language, genre, author, library_token, in_stock=True, user_id=''):
         self.book_id = self.set_id()
         self.book_title = book_title
         self.isbn = isbn
         self.pages = pages
         self.language = language
         self.genre = genre
+        self.author = author
         self.in_stock = in_stock
         self.library_token = library_token
+        self.userid = user_id
     
     def set_id(self):
         return str(uuid4())
@@ -139,11 +141,17 @@ class Transaction(db.Model):
 class LibrarySchema(ma.Schema):
     class Meta:
         fields = ['library_id', 'library_name', 'library_email', 'library_address', 'library_city', 'library_state']
-        
+
+class FullLibrarySchema(ma.Schema):
+    class Meta:
+        fields = ['library_id', 'library_name', 'library_email', 'library_address', 'library_city', 'library_state', 'library_token']
+
 class BookSchema(ma.Schema):
     class Meta:
         fields = ['book_id', 'book_title', 'isbn', 'pages', 'language', 'genre', 'author', 'in_stock']
 
+full_library_schema = FullLibrarySchema()
+libraries_schema = FullLibrarySchema(many=True)
 library_schema = LibrarySchema()
 book_schema = BookSchema()
 books_schema = BookSchema(many=True)
