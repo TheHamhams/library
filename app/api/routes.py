@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from helpers import user_token_required, library_token_required, secret_key_required
-from models import db, User, Book, Library, Transaction, book_schema, books_schema, library_schema, full_library_schema, libraries_schema
+from models import db, User, Book, Library, Transaction, book_schema, books_schema, library_schema, full_library_schema, libraries_schema, transaction_schema, transactions_schema
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
@@ -144,3 +144,33 @@ def delete_library(current_secret_key, id):
     return jsonify(response)
 
 # Transaction routes
+# GET
+@api.route('/transactions/<id>')
+@library_token_required
+def library_transactions(current_library_token, id):
+    library = current_library_token.library_id
+    transactions = Transaction.query.filter_by(library_id = library).all()
+    
+    response = transactions_schema.dump(transactions)
+    return jsonify(response)
+
+# POST
+@api.route('/transactions/<id>')
+@user_token_required
+def create_transaction(current_user_token, id):
+    book = Book.query.filter_by(book_id = request.json['book_id']).first()
+    if book.in_stock == False:
+        return {'message': 'book is out of stock'}
+    
+    user_id = current_user_token.id
+    book_id = request.json['book_id']
+    library_id = request.json['library_id']
+    user_token = current_user_token.user_token
+    
+    transaction = Transaction(user_id, book_id, library_id, user_token)
+    
+    db.session.add(transaction)
+    db.session.commit()
+    
+    response = transaction_schema.dump(transaction)
+    return jsonify(response)
