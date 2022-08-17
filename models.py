@@ -123,14 +123,16 @@ class Transaction(db.Model):
     book_id = db.Column(db.String, db.ForeignKey('book.book_id'), nullable = False)
     library_id = db.Column(db.String, db.ForeignKey('library.library_id'), nullable = False)
     user_token = db.Column(db.String, db.ForeignKey('user.user_token'), nullable=False)
+    checking_out = db.Column(db.Boolean, nullable=True)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
-    def __init__(self, user_id, book_id, library_id, user_token):
+    def __init__(self, user_id, book_id, library_id, user_token, checking_out):
         self.transaction_id = self.set_id()
         self.user_id = user_id
         self.book_id = book_id
         self.library_id = library_id
-        self.library_token = user_token
+        self.user_token = user_token
+        self.checking_out = checking_out
         
     def set_id(self):
         return str(uuid4())
@@ -152,7 +154,7 @@ class BookSchema(ma.Schema):
 
 class TransactionSchema(ma.Schema):
     class Meta:
-        fields = ['transaction_id', 'user_id', 'book_id', 'library_id', 'user_token']
+        fields = ['transaction_id', 'user_id', 'book_id', 'library_id', 'user_token', 'checking_out']
 
 full_library_schema = FullLibrarySchema()
 libraries_schema = FullLibrarySchema(many=True)

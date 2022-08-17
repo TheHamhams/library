@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, request, jsonify
 from helpers import user_token_required, library_token_required, secret_key_required
 from models import db, User, Book, Library, Transaction, book_schema, books_schema, library_schema, full_library_schema, libraries_schema, transaction_schema, transactions_schema
@@ -10,6 +11,7 @@ api = Blueprint('api', __name__, url_prefix='/api')
 def add_user(current_user_token, book_id):
     book = Book.query.get(book_id)
     book.user_id = current_user_token.id
+    book.in_stock = False
     
     db.session.commit()
     
@@ -145,7 +147,7 @@ def delete_library(current_secret_key, id):
 
 # Transaction routes
 # GET
-@api.route('/transactions/<id>')
+@api.route('/transactions/library/<id>')
 @library_token_required
 def library_transactions(current_library_token, id):
     library = current_library_token.library_id
@@ -154,22 +156,50 @@ def library_transactions(current_library_token, id):
     response = transactions_schema.dump(transactions)
     return jsonify(response)
 
+@api.route('/transactions/user/<id>')
+@user_token_required
+def user_transactions(current_library_token, id):
+    transactions = Transaction.query.filter_by(user_id = id).all()
+    response = transactions_schema.dump(transactions)
+    return jsonify(response)
+
+
 # POST
-@api.route('/transactions/<id>')
+@api.route('/transactions/<id>', methods=['POST'])
 @user_token_required
 def create_transaction(current_user_token, id):
     book = Book.query.filter_by(book_id = request.json['book_id']).first()
-    if book.in_stock == False:
+    if book.in_stock == False and request.json['checking_out'] == True:
         return {'message': 'book is out of stock'}
+    if book.in_stock == True and request.json['checking_out'] == False:
+        return {'message': 'book has already been returned'}
     
-    user_id = current_user_token.id
+    user_id = id
     book_id = request.json['book_id']
     library_id = request.json['library_id']
-    user_token = current_user_token.user_token
+    user_token = request.json['user_token']
+    checking_out = request.json['checking_out']
     
-    transaction = Transaction(user_id, book_id, library_id, user_token)
+    if request.json['checking_out'] == True:
+        book.in_stock = False
+    else:
+        book.in_stock = True
+    
+    transaction = Transaction(user_id, book_id, library_id, user_token, checking_out)
     
     db.session.add(transaction)
+    db.session.commit()
+    
+    response = transaction_schema.dump(transaction)
+    return jsonify(response)
+
+# DELETE
+@api.route('/transactions/<id>')
+@library_token_required
+def delete_transaction(current_library_token, id):
+    transaction = Transaction.query.get(id)
+    
+    db.session.delete(transaction)
     db.session.commit()
     
     response = transaction_schema.dump(transaction)
