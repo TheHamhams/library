@@ -1,11 +1,33 @@
 import json
 from flask import Blueprint, request, jsonify
 from helpers import user_token_required, library_token_required, secret_key_required
-from models import db, User, Book, Library, Transaction, book_schema, books_schema, library_schema, full_library_schema, libraries_schema, transaction_schema, transactions_schema
+from models import db, User, Book, Library, Transaction, book_schema, books_schema, library_schema, full_library_schema, libraries_schema, transaction_schema, transactions_schema, check_password_hash, login_schema
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
 # User routes
+# GET
+@api.route('/users', methods=['GET', 'POST'])
+def user():
+    try:
+        if request.method == 'POST':
+            email = request.json['email']
+            password = request.json['password']
+            print(1)
+            user = User.query.filter(User.email == email).first()
+            print(2)
+            if user:
+                if check_password_hash(user.password, password):
+                    print(3)
+                    response= login_schema.dump(user)
+                    return response
+
+
+    except:
+        raise Exception('Invalid form data: Please check your form')
+
+
+# PUT
 @api.route('/user/<book_id>', methods=['PUT'])
 @user_token_required
 def add_user(current_user_token, book_id):
@@ -17,7 +39,8 @@ def add_user(current_user_token, book_id):
     
     response = book_schema.dump(book)
     return jsonify(response)
-    
+
+
 
 
 # Books routes

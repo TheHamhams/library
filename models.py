@@ -155,6 +155,10 @@ class BookSchema(ma.Schema):
 class TransactionSchema(ma.Schema):
     class Meta:
         fields = ['transaction_id', 'user_id', 'book_id', 'library_id', 'user_token', 'checking_out']
+        
+class LoginSchema(ma.Schema):
+    class Meta:
+        fields = ['id', 'email', 'first_name', 'last_name', 'user_token']
 
 full_library_schema = FullLibrarySchema()
 libraries_schema = FullLibrarySchema(many=True)
@@ -163,3 +167,4 @@ book_schema = BookSchema()
 books_schema = BookSchema(many=True)
 transaction_schema = TransactionSchema()
 transactions_schema = TransactionSchema(many=True)
+login_schema = LoginSchema()
