@@ -95,7 +95,7 @@ class Book(db.Model):
     author = db.Column(db.String, nullable=True)
     in_stock = db.Column(db.Boolean, default=True)
     library_token = db.Column(db.String, db.ForeignKey('library.library_token'), nullable=False)
-    user_id = db.Column(db.String, db.ForeignKey('user.id'), nullable=True)
+    user_id = db.Column(db.String, nullable=True)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
     def __init__(self, book_title, isbn, pages, language, genre, author, library_token, in_stock=True, user_id=''):

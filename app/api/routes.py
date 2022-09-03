@@ -1,4 +1,5 @@
 import json
+from pickle import FALSE
 from flask import Blueprint, request, jsonify
 from helpers import user_token_required, library_token_required, secret_key_required
 from models import db, User, Book, Library, Transaction, book_schema, books_schema, library_schema, full_library_schema, libraries_schema, transaction_schema, transactions_schema, check_password_hash, login_schema
@@ -24,6 +25,7 @@ def user():
 
 
     except:
+
         raise Exception('Invalid form data: Please check your form')
 
 
@@ -47,15 +49,15 @@ def add_user(current_user_token, book_id):
 # GET 
 @api.route('/books', methods=['GET'])
 def all_books():
-    books = Book.query.all()
+    books = Book.query.filter_by(in_stock = True).all()
     response = books_schema.dump(books)
     return jsonify(response)
     
 
-@api.route('/books/user')
-@user_token_required
-def user_books(current_user_token):
-    user = current_user_token.id
+@api.route('/books/user/<id>', methods=['GET'])
+
+def user_books(id):
+    user = id
     books = Book.query.filter_by(user_id = user).all()
     response = books_schema.dump(books)
     return jsonify(response)
@@ -98,6 +100,32 @@ def change_book(current_library_token, id):
 
     db.session.commit()
     response = book_schema.dump(book)
+    return jsonify(response)
+
+@api.route('/books/checkout', methods=['PUT'])
+@secret_key_required
+def checkout_book(current_secret_key): 
+
+    book = Book.query.filter_by(book_id = request.json['book_id']).first()
+    book.in_stock = False
+    book.user_id = request.json['user_id']
+
+    db.session.commit()
+    response = book_schema.dump(book)
+
+    return jsonify(response)
+
+@api.route('/books/checkin', methods=['PUT'])
+@secret_key_required
+def checkin_book(current_secret_key): 
+
+    book = Book.query.filter_by(book_id = request.json['book_id']).first()
+    book.in_stock = True
+    book.user_id = ''
+
+    db.session.commit()
+    response = book_schema.dump(book)
+
     return jsonify(response)
 
 # DELETE
